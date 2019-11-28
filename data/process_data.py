@@ -32,7 +32,7 @@ def clean_data(df):
     
 def save_data(df, database_filename):
     engine = create_engine(('sqlite:///' + database_filename))
-    df.to_sql(database_filename, engine, index=False)
+    df.to_sql('Messages', engine, index=False)
 
 
 def main():

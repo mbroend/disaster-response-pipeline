@@ -1,3 +1,4 @@
 exploratory/.ipynb_checkpoints
 exploratory/DisasterResponse.pkl
 models/classifier.pkl
+data/DisasterResponse.db

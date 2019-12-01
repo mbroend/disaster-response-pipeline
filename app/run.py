@@ -7,7 +7,7 @@ from nltk.tokenize import word_tokenize
 
 from flask import Flask
 from flask import render_template, request, jsonify
-from plotly.graph_objs import Bar
+from plotly.graph_objs import Bar, Violin, Box
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
 
@@ -43,6 +43,11 @@ def index():
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
+    classes_count = df.drop(columns = ['id','message','genre']).sum()
+    classes_names = list(classes_count.index)
+    
+    text_length = df['message'].str.len()
+    
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
@@ -61,9 +66,44 @@ def index():
                 },
                 'xaxis': {
                     'title': "Genre"
+                },
+                
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=classes_names,
+                    y=classes_count
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Classes in Training Data',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Classes"
+                }
+            }
+        },
+        {
+            'data': [
+                Box(
+                x = text_length,
+                name = '' 
+                )
+            ],
+
+            'layout': {
+                'title': 'Box Plot of Text Length',
+                'xaxis': {
+                    'title': "Text length"
                 }
             }
         }
+                
     ]
     
     # encode plotly graphs in JSON

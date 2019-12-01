@@ -1,21 +1,34 @@
 # import libraries
+# Download nltk pacakges
 import nltk
 nltk.download(['punkt', 'wordnet', 'averaged_perceptron_tagger'])
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
 import sys
 import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
+
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.externals import joblib
 from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.pipeline import Pipeline, FeatureUnion
+
 
 def load_data(database_filepath):
+    """
+    Load the messages from the database.
+    Input:
+    database_filepath: database filtpath with extension
+    Output:
+    X: messages from database
+    Y: Classes from database
+    category_names: The class names
+    """
     engine = create_engine('sqlite:///' + database_filepath)
     df = pd.read_sql('SELECT * FROM Messages', engine)
     
@@ -26,6 +39,13 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
+    """
+    Tokenizes and lemmatizes text:
+    Input:
+    Text: List of strings or string to be tokenized
+    Output:
+    clean_tokens: List the text tokenized
+    """
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
 
@@ -37,6 +57,13 @@ def tokenize(text):
 
 
 def build_model():
+    """
+    Builds the pipeline for the model
+    Input:
+    None
+    Output:
+    model: The ML model
+    """
     model = Pipeline([('vect', CountVectorizer(tokenizer=tokenize)),
                      ('tfidf', TfidfTransformer()),
                      ('clf', MultiOutputClassifier(RandomForestClassifier(n_estimators=100)))
@@ -45,9 +72,19 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """
+    Print metricts of evaluation of ML model
+    Input:
+    model: The model
+    X_test: Test data
+    Y_test: Test labels
+    category_names: The name of classes for Y_test
+    Output:
+    None
+    """
     y_pred = model.predict(X_test)
     y_pred = pd.DataFrame(y_pred,columns = Y_test.columns)
-    for col in Y_test.columns:
+    for col in category_names:
         print('-----------------------{}-----------------------'.format(col))
         print(classification_report(Y_test[col],y_pred[col], 
                                     labels = [0,1], 
@@ -55,6 +92,12 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
+    """
+    Saves the ML model as pkl file.
+    Input:
+    model: the ML model
+    model_filepath: filepath including extension
+    """
     joblib.dump(model, model_filepath,  compress = 3)
 
 
